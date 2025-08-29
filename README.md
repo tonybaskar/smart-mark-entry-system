@@ -26,8 +26,3 @@ An interactive web-based solution for educators to enter student marks, calculat
 ## Author  
 **Made with ❤️ by [Tony Baskar](https://www.linkedin.com/in/tonybaskar)**
 
-
-## Installation  
-1. Clone the repository:  
-   ```bash
-   git clone https://github.com/yourusername/smart-mark-entry-system.git
