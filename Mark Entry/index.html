@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Mark Entry</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  
+    <link rel="shortcut icon" type="x-icon" href="assets/dmesbybtslogo.png"/>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+</head>
+<body>
+ 
+   <!-- Reset Confirmation Modal -->
+<div id="resetModal" class="modal">
+  <div class="modal-content animate__animated animate__zoomIn">
+    <h2><i class="fas fa-exclamation-triangle" style="color:crimson;"></i> Confirm Reset</h2>
+    <p>This will clear all stored data and reload the page. Are you sure you want to continue?</p>
+    <div class="modal-actions">
+      <button onclick="confirmReset()" class="confirm-btn"><i class="fas fa-check-circle"></i> Yes, Reset</button>
+      <button onclick="closeResetModal()" class="cancel-btn"><i class="fas fa-times-circle"></i> Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- how to use modal -->
+
+<div id="howToUseModal" class="modal">
+  <div class="modal-content animate__animated animate__fadeIn">
+    <span class="close" onclick="document.getElementById('howToUseModal').style.display='none'">&times;</span>
+    <h2><i class="fas fa-info-circle"></i> How to Use This System</h2>
+    <ol>
+      <li><strong>Enter Exam Info:</strong> Fill in the School Name, Grade, Number of Present/Absent students, Total Marks, and select Exam Type.</li>
+      <li><strong>Add Student Marks:</strong> Type the student's name and marks, then click “Add Student”.</li>
+      <li><strong>Live Insights:</strong> See rank, remarks, and performance chart update automatically.</li>
+      <li><strong>Edit or Remove:</strong> Click edit to correct marks, or delete a student entry.</li>
+      <li><strong>Export:</strong> Download the full mark list in Excel or PDF format.</li>
+      <li><strong>Search:</strong> Use the search bar to filter by student names.</li>
+      <li><strong>Reset:</strong> Use the reset button to clear data and start a new exam entry.</li>
+      <li><strong>Absent:</strong>To Mark the student as absent enter 0 in mark while adding student.</li>
+    </ol>
+    <p style="font-style: italic;">💡 Tip: Use the light/dark toggle for a comfortable viewing experience.</p>
+  </div>
+</div>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="header-container">
+            <!-- Logo and System Name -->
+            <div class="branding">
+                <div class="logo">
+                    <i class="fas fa-chalkboard-teacher"></i>
+                </div>
+                <div class="system-info">
+                    <h1>Digital Mark Entry System</h1>
+                    
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="main-nav">
+                <ul class="nav-links">
+                    <li><a href="#"><i class="fas fa-home"></i> Home</a></li>
+                    <li><a href="#SchoolDetails"><i class="fas fa-user-graduate"></i> Enter School Details</a></li>
+                    <li><a href="#examInfoDisplay"><i class="fas fa-chart-bar"></i> View School Info</a></li>
+                    <li><a href="#performanceChartTitle"><i class="fas fa-cog"></i> View Performance</a></li>
+                    <!-- <li><button class="nav-btn" onclick="toggleTheme()">
+                        <i class="fas fa-adjust"></i> Theme
+                    </button></li> -->
+                </ul>
+            </nav>
+            
+            <!-- Mobile Menu Button -->
+            <div class="mobile-menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </header>
+
+<br><br><br><br>
+
+  <h1>1.Enter the school details and student marks here</h1>   
+    <div class="container" id="SchoolDetails">
+      <div class="controls">
+     
+      <input type="text" class="search-box" placeholder="Search Student by name" oninput="filterStudents(this.value)">
+      <button onclick="document.getElementById('howToUseModal').style.display='block'">
+      <i class="fas fa-question-circle"></i> How to Use
+    </button><br>
+      <input type="text" id="schoolName" placeholder="School Name">
+      <input type="text" id="grade" placeholder="Grade">
+      <input type="number" id="presentCount" placeholder="No. of Present">
+      <input type="number" id="absentCount" placeholder="No. of Absent">
+      <input type="number" id="totalMarks" placeholder="Total Marks Conducted" onchange="updateTotalMarks()">
+      <select id="examType">
+        <option value="">Select Exam Type</option>
+        <option>1st Mid Term Examination-July(2025-2026)</option>
+        <option>2nd Mid Term Examination-August(2025-2026)</option>
+        <option>Quarterly Examination-September(2025-2026)</option>
+        <option>Half Yearly Examination-November(2025-2026)</option>
+        <option>Annual Examination-March(2025-2026)</option>
+      </select>
+      <button onclick="saveMetaData()"><i class="fas fa-save"></i> Save Exam Info</button>
+      <button onclick="resetApp()" style="background-color: crimson; color: white;">
+      <i class="fas fa-sync-alt"></i> Reset App
+      </button>
+
+      <br>
+      <input type="text" id="studentName" placeholder="Student Name">
+      <input type="number" id="studentMark" placeholder="Marks">
+      <button onclick="addStudent()"><i class="fas fa-user-plus"></i> Add Student</button>
+    </div>
+
+  
+    <h1>2.View the School Info You Saved</h1>
+    <div class="meta-info animate__animated animate__fadeIn" id="examInfoDisplay"></div>
+    <h1 id="performanceChartTitle">3.View the performance chart of the students</h1>
+    <canvas id="performanceChart"></canvas>
+
+    <h1>4. View  Marks and Export as PDF</h1>
+      <!-- export feature -->
+         <div class="export-buttons">
+      <!-- <button onclick="exportExcel()"><i class="fas fa-file-excel"></i> Export to Excel</button> -->
+      <button onclick="exportPDF()"><i class="fas fa-file-pdf"></i> Export to PDF</button>
+    </div>
+    <table id="studentTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Mark</th>
+          <th>Rank</th>
+          <th>Remarks</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="studentBody"></tbody>
+    </table>
+
+    <div id="stats"></div>
+  </div>
+<!-- footer -->
+<footer class="main-footer">
+  <div class="footer-wave"></div>
+  
+  <div class="footer-content">
+    <div class="quote-container">
+      <i class="fas fa-quote-left quote-icon"></i>
+      <p class="dynamic-quote">"Education is the most powerful weapon which you can use to change the world."</p>
+      <i class="fas fa-quote-right quote-icon"></i>
+      <p class="quote-author">― Nelson Mandela</p>
+    </div>
+    
+    <div class="creator-info">
+      <div class="signature">
+        <span>Designed and Developed with</span>
+        <i class="fas fa-heart pulse"></i>
+        <span>by</span>
+      </div>
+      <div class="creator-name">
+        <span class="name-highlight">Tony Baskar Y</span>
+      </div>
+      <div class="social-links">
+        <a href="https://github.com/tonybaskar" title="GitHub"><i class="fab fa-github"></i></a>
+        <a href="https://www.linkedin.com/public-profile/settings?trk=d_flagship3_profile_self_view_public_profile" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+        <a href="https://tonybaskar.github.io/" title="Portfolio"><i class="fas fa-globe"></i></a>
+      </div>
+    </div>
+  </div>
+  
+  <div class="copyright">
+    &copy; <span class="year">2025</span> Digital Mark Entry System | All Rights Reserved
+  </div>
+</footer>
+<script>
+    let students = JSON.parse(localStorage.getItem("students") || "[]");
+    let meta = JSON.parse(localStorage.getItem("examMeta") || "{}");
+    let totalMark = meta.totalMarks || 100;
+    let theme = localStorage.getItem("theme") || "light";
+    document.documentElement.setAttribute("data-theme", theme);
+
+    function toggleTheme() {
+      theme = (theme === "light") ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem("theme", theme);
+    }
+
+    function saveMetaData() {
+      meta = {
+        schoolName: document.getElementById("schoolName").value,
+        grade: document.getElementById("grade").value,
+        present: document.getElementById("presentCount").value,
+        absent: document.getElementById("absentCount").value,
+        totalMarks: document.getElementById("totalMarks").value,
+        examType: document.getElementById("examType").value
+      };
+      totalMark = parseFloat(meta.totalMarks) || 100;
+      localStorage.setItem("examMeta", JSON.stringify(meta));
+      renderExamInfo();
+      updateTotalMarks();
+    }
+
+    function renderExamInfo() {
+      const container = document.getElementById("examInfoDisplay");
+      if (!meta.schoolName) return;
+      container.innerHTML = `
+        <h2> ${meta.schoolName} </h2>
+        <div class="line">
+        <i class="fas fa-file-signature"></i> 
+        <span>Exam:</span>
+        <span>${meta.examType}</span>
+        </div>
+        <div class="line">
+        <i class="fas fa-graduation-cap"></i>
+        <span>Grade:</span> 
+        <span>${meta.grade}</span>
+        </div>
+        <div class="line"><i class="fas fa-user-check"></i><span>Present:</span> <span>${meta.present}</span></div>
+        <div class="line"><i class="fas fa-user-times"></i><span>Absent:</span> <span>${meta.absent}</span></div>
+        <div class="line"><i class="fas fa-star"></i><span>Total Marks:</span> <span>${meta.totalMarks}</span></div>
+      `;
+    }
+
+    function updateTotalMarks() {
+      totalMark = parseFloat(document.getElementById("totalMarks").value) || totalMark;
+      renderTable();
+    }
+
+    function addStudent() {
+      const name = document.getElementById("studentName").value.trim();
+      const mark = parseFloat(document.getElementById("studentMark").value);
+
+      if (!name || isNaN(mark) || mark < 0 || mark > totalMark) {
+        alert(`Enter valid name and mark between 0 and ${totalMark}.`);
+        return;
+      }
+
+      if (students.some(s => s.name.toLowerCase() === name.toLowerCase())) {
+        alert("Duplicate student name.");
+        return;
+      }
+
+      students.push({ name, mark });
+      saveAndRender();
+      document.getElementById("studentName").value = "";
+      document.getElementById("studentMark").value = "";
+    }
+
+    function saveAndRender() {
+      localStorage.setItem("students", JSON.stringify(students));
+      renderTable();
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('performanceChart').getContext('2d');
+      if (window.chart) window.chart.destroy();
+      const labels = students.map(s => s.name);
+      const data = students.map(s => s.mark);
+
+      window.chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Marks',
+            data: data,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)'
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true, max: totalMark }
+          }
+        }
+      });
+    }
+
+    function renderTable() {
+      students.sort((a, b) => b.mark - a.mark);
+      const tbody = document.getElementById("studentBody");
+      tbody.innerHTML = "";
+      let total = 0;
+
+      students.forEach((s, i) => {
+        const row = document.createElement("tr");
+        const markClass = s.mark >= 0.75 * totalMark ? "high" : s.mark < 0.4 * totalMark ? "low" : "";
+       const remark = s.mark === 0 ? "" : 
+              s.mark >= 0.9 * totalMark ? "Excellent" :
+              s.mark >= 0.75 * totalMark ? "Good" : 
+              s.mark < 0.4 * totalMark ? "Needs Improvement" : 
+              "Average";
+
+        row.innerHTML = `
+          <td contenteditable="true" onblur="updateName(${i}, this.innerText)">${s.name}</td>
+          <td contenteditable="true" class="${markClass}" onblur="updateMark(${i}, this.innerText)">${s.mark}</td>
+          <td>${i + 1}</td>
+          <td>${remark || 'Absent'}</td>
+          <td><button onclick="deleteStudent(${i})"><i class='fas fa-trash'></i></button></td>
+        `;
+        tbody.appendChild(row);
+        total += s.mark;
+      });
+
+      const avg = students.length ? (total / students.length).toFixed(2) : 0;
+      document.getElementById("stats").innerText = `Class Average: ${avg} / ${totalMark}`;
+
+      renderChart();
+    }
+
+    function deleteStudent(index) {
+      students.splice(index, 1);
+      saveAndRender();
+    }
+
+    function updateName(index, newName) {
+      if (!newName.trim()) return;
+      if (students.some((s, i) => i !== index && s.name.toLowerCase() === newName.toLowerCase())) {
+        alert("Duplicate student name.");
+        renderTable();
+        return;
+      }
+      students[index].name = newName.trim();
+      saveAndRender();
+    }
+
+    function updateMark(index, newMark) {
+      const mark = parseFloat(newMark);
+      if (isNaN(mark) || mark < 0 || mark > totalMark) {
+        alert(`Invalid mark. Must be between 0 and ${totalMark}.`);
+        renderTable();
+        return;
+      }
+      students[index].mark = mark;
+      saveAndRender();
+    }
+
+    function filterStudents(query) {
+      const rows = document.querySelectorAll("#studentBody tr");
+      rows.forEach(row => {
+        const name = row.children[0].innerText.toLowerCase();
+        row.style.display = name.includes(query.toLowerCase()) ? "" : "none";
+      });
+    }
+    
+    renderExamInfo();
+    renderTable();
+    // export feature
+
+     // Existing JS unchanged ... (place export functions after renderTable)
+
+    // function exportExcel() {
+    //   const ws = XLSX.utils.table_to_sheet(document.getElementById("studentTable"));
+    //   const wb = XLSX.utils.book_new();
+    //   XLSX.utils.book_append_sheet(wb, ws, "Marks");
+    //   XLSX.writeFile(wb, "student_marks.xlsx");
+    // }
+
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
